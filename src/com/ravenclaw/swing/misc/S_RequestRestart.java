@@ -49,6 +49,8 @@ public class S_RequestRestart implements Runnable {
 	 */
 	@Override
 	public void run() {
+		System.out.println("Request sent");
 		claw.start();
+		System.out.println("Request done");
 	}
 }

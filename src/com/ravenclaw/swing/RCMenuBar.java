@@ -32,7 +32,6 @@
 package com.ravenclaw.swing;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -43,6 +42,7 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
 import com.jme3.input.FlyByCamera;
+import com.ravenclaw.GroovyScriptManager;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.swing.misc.S_RequestRestart;
@@ -74,9 +74,27 @@ public final class RCMenuBar extends JMenuBar {
 				SwingUtilities.invokeLater(new S_RequestRestart(rc));
 			}
 		});
-		
 		vp_menu.add(vp_r_restart);
 
+		JMenuItem vp_explorer = new JMenuItem("Explorer");
+		vp_explorer.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//RavenClaw rc = Corax.getInstance(RavenClaw.class);
+				//SwingUtilities.invokeLater(new S_RequestRestart(rc));
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						System.out.println("Starting");
+						GroovyScriptManager.getInstance().load("SceneNavigator.gcy");
+						System.out.println("Ended");
+					}
+				});
+			}
+		});
+		vp_menu.add(vp_explorer);
+		
 		vp_menu.add(new JSeparator());
 		
 		JMenu vp_camera = new JMenu("Camera");
@@ -118,5 +136,14 @@ public final class RCMenuBar extends JMenuBar {
 		vp_menu.add(vp_camera);
 
 		add(vp_menu);
+		
+		JMenu a_menu = new JMenu("Assets");
+		
+		JMenuItem a_test = new JMenuItem("Test");
+		a_menu.add(a_test);
+
+		add(a_menu);
+
 	}
 }
+

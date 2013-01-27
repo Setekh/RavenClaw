@@ -32,6 +32,10 @@
 package com.ravenclaw;
 
 import com.ravenclaw.managers.ActionManager;
+import com.ravenclaw.managers.InputStateManager;
+import com.ravenclaw.managers.Inspector;
+import com.ravenclaw.managers.SelectionManager;
+import com.ravenclaw.managers.TransformManager;
 
 import corvus.corax.CoraxSetupTemplate;
 import corvus.corax.processing.PrimeAnnotations;
@@ -45,7 +49,12 @@ class Setup extends CoraxSetupTemplate {
 	public void action() {
 		installCorvusConfig("./binary/");
 		installProcessor(new PrimeAnnotations());
+
 		addSingleton(ActionManager.class);
+		addSingleton(InputStateManager.class);
+		addSingleton(Inspector.class);
+		addSingleton(SelectionManager.class);
+		addSingleton(TransformManager.class);
 		
 		RavenClaw app = new RavenClaw();
 		addSingleton(app.getClass(), app);

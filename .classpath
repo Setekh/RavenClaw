@@ -4,6 +4,8 @@
 	<classpathentry kind="src" path="jEdit"/>
 	<classpathentry kind="src" path="assets"/>
 	<classpathentry kind="src" path="binary"/>
+	<classpathentry kind="src" path="tests"/>
+	<classpathentry kind="src" path="scripting"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jme3wr"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Corvus Engine 4"/>
 	<classpathentry kind="lib" path="libs/commons-io-2.3.jar"/>
@@ -11,7 +13,10 @@
 	<classpathentry kind="lib" path="libs/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="libs/netty-3.3.1.Final.jar"/>
 	<classpathentry kind="lib" path="C:/jEdit/jedit.jar"/>
-	<classpathentry kind="lib" path="libs/javadocking.jar"/>
+	<classpathentry kind="lib" path="libs/javadocking.jar" sourcepath="libs/javadocking.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="libs/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="/jme3wr/lib/lwjgl/lwjgl.jar"/>
+	<classpathentry kind="lib" path="libs/groovy-all-2.1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

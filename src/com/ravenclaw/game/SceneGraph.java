@@ -33,9 +33,19 @@ package com.ravenclaw.game;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
+import com.jme3.input.InputManager;
 import com.jme3.math.ColorRGBA;
-import com.ravenclaw.appstates.StartedRendering;
+import com.jme3.renderer.Camera;
+import com.ravenclaw.game.appstates.StartedRendering;
+import com.ravenclaw.managers.ActionManager;
+import com.ravenclaw.managers.InputStateManager;
+import com.ravenclaw.managers.Inspector;
+import com.ravenclaw.managers.ObjectManager;
+import com.ravenclaw.managers.SelectionManager;
+import com.ravenclaw.managers.TransformManager;
 
+import corvus.corax.Corax;
+import corvus.corax.processing.annotation.Finalize;
 import corvus.corax.processing.annotation.Provide;
 /**
  * @author Vlad
@@ -55,5 +65,38 @@ public class SceneGraph extends SimpleApplication {
 	@Override
 	public AssetManager getAssetManager() {
 		return super.getAssetManager();
+	}
+
+	/* (non-Javadoc)
+	 * @see com.jme3.app.Application#getCamera()
+	 */
+	@Provide
+	@Override
+	public Camera getCamera() {
+		return super.getCamera();
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.jme3.app.Application#getInputManager()
+	 */
+	@Provide
+	@Override
+	public InputManager getInputManager() {
+		return super.getInputManager();
+	}
+
+	@Finalize
+	public void clean() {
+		System.out.println("Disposed");
+		
+		Corax corax = Corax.instance();
+		
+		// Needs to get cleaned for the new SceneGraph
+		corax.disposeInstance(ActionManager.class);
+		corax.disposeInstance(InputStateManager.class);
+		corax.disposeInstance(Inspector.class);
+		corax.disposeInstance(ObjectManager.class);
+		corax.disposeInstance(SelectionManager.class);
+		corax.disposeInstance(TransformManager.class);
 	}
 }

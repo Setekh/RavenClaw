@@ -45,6 +45,7 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -57,8 +58,10 @@ import com.jme3.system.JmeCanvasContext;
 import com.jme3.system.JmeSystem;
 import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.swing.CanvasFocusListener;
+import com.ravenclaw.swing.ContentPanel;
 import com.ravenclaw.swing.RCMenuBar;
 import com.ravenclaw.utils.ArchidIndex;
+import com.sun.java.swing.plaf.windows.WindowsLookAndFeel;
 
 import corvus.corax.Corax;
 import corvus.corax.processing.annotation.Initiate;
@@ -75,8 +78,13 @@ public final class RavenClaw {
 	private SceneGraph app;
 
 	private Node mainNode = new Node("RavenClaw: Node");
+
+	private ContentPanel contentpanel;
+
+	public RavenClaw() {
+		createFrame();
+	}
 	
-	@Initiate
 	private void createFrame() {
 		try {
 			InputStream stream = getClass().getClassLoader().getResourceAsStream("Textures/icon.png");
@@ -89,9 +97,11 @@ public final class RavenClaw {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
+
 		frame.setJMenuBar(new RCMenuBar());
-		
+		frame.setLayout(new BorderLayout());
+		frame.add(new JPanel(), BorderLayout.NORTH);
+		frame.setContentPane(contentpanel = new ContentPanel());
 		frame.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -100,27 +110,37 @@ public final class RavenClaw {
 				}
 			}
 		});
+		
+		frame.pack();
+		
+		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+
+		frame.setSize((int)(size.width / 1.23), (int) (size.height / 1.23));
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
 	@Initiate
 	public void start() {
+		Corax corax = Corax.instance();
+
 		if (app != null) {
 			app.stop(true);
 			frame.remove(canvas);
+			corax.disposeInstance(app);
 		}
 
 		app = new SceneGraph();
 
 		// Init
-		Corax.instance().addSingleton(app.getClass(), app);
+		corax.addSingleton(app.getClass(), app);
 
 		AppSettings settings;
 		app.setSettings(settings = new AppSettings(true));
 
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 
-		settings.setWidth((int) (size.width / 1.23));
-		settings.setHeight((int) (size.height / 1.23));
+		settings.setWidth((int) (size.width / 2.23));
+		settings.setHeight((int) (size.height / 2.23));
 
 		File file = new File("./binary/Settings.ini");
 
@@ -148,12 +168,12 @@ public final class RavenClaw {
 		canvas = ((JmeCanvasContext)app.getContext()).getCanvas();
 		canvas.addFocusListener(new CanvasFocusListener());
 
-		canvas.setSize(settings.getWidth(), settings.getHeight());
+		canvas.setMinimumSize(new Dimension((int)(settings.getWidth() / 1.23), (int)(settings.getHeight() / 1.23)));
+		canvas.setPreferredSize(new Dimension((int) (size.width / 1.23), (int) (size.height / 1.23)));
 		
-		frame.add(canvas, BorderLayout.CENTER);
+		contentpanel.load(canvas);
+		//frame.add(canvas, BorderLayout.CENTER);
 		//setAlwaysOnTop(true);
-		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		// Needs to be here, since low permision flag means the native libs wont be extracted at startup
 		// and native bullet wont run.
@@ -195,7 +215,7 @@ public final class RavenClaw {
 			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 			ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
 
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			UIManager.setLookAndFeel(new WindowsLookAndFeel());
 			//UIManager.setLookAndFeel(new NimbusLookAndFeel());
 		}
 		catch (Exception e) {
@@ -203,19 +223,6 @@ public final class RavenClaw {
 		}
 
 		Corax.create(new Setup());
-		
-//		RavenClaw cw = Corax.getInstance(RavenClaw.class);
-//		
-//		int ticks = 0;
-//		while (true) {
-//			if(ticks == 6) {
-//				cw.start();
-//				ticks = 0;
-//			}
-//			
-//			Thread.sleep(800);
-//			ticks++;
-//		}
 	}
 
 	public void writeSettings(AppSettings settings, File file) {
@@ -228,4 +235,6 @@ public final class RavenClaw {
 			e.printStackTrace();
 		}
 	}
+	
+	
 }
