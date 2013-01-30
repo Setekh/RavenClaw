@@ -34,6 +34,7 @@ package com.ravenclaw;
 import com.ravenclaw.managers.ActionManager;
 import com.ravenclaw.managers.InputStateManager;
 import com.ravenclaw.managers.Inspector;
+import com.ravenclaw.managers.ObjectManager;
 import com.ravenclaw.managers.SelectionManager;
 import com.ravenclaw.managers.TransformManager;
 
@@ -55,6 +56,7 @@ class Setup extends CoraxSetupTemplate {
 		addSingleton(Inspector.class);
 		addSingleton(SelectionManager.class);
 		addSingleton(TransformManager.class);
+		addSingleton(ObjectManager.class);
 		
 		RavenClaw app = new RavenClaw();
 		addSingleton(app.getClass(), app);

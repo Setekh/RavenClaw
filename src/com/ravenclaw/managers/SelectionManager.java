@@ -31,34 +31,54 @@
  */
 package com.ravenclaw.managers;
 
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
+
+import javolution.util.FastMap;
 
 import org.apache.log4j.Logger;
 
 import com.jme3.scene.Spatial;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.managers.ActionManager.UseAction;
+import com.ravenclaw.managers.ObjectManager.ObjectData;
+import com.ravenclaw.utils.ArchidIndex;
 
 import corvus.corax.Corax;
+import corvus.corax.event.EventMonitor;
+import corvus.corax.event.listeners.CoraxListener;
 import corvus.corax.processing.annotation.Inject;
+import corvus.corax.tools.MelloriObjectBuffer;
 
 /**
  * @author Vlad
  */
-public final class SelectionManager {
+public final class SelectionManager implements CoraxListener {
 
 	private static final Logger _log = Logger.getLogger(SelectionManager.class);
 	
-	private ArrayList<Selection> selected = new ArrayList<>(20);
+	private FastMap<Spatial, Selection> selected = new FastMap<Spatial, Selection>();
 
+	@Inject
+	private RavenClaw claw;
+	
 	@Inject
 	private ActionManager actionManager;
 	
+	@Inject
+	private ObjectManager objectManager;
+	
 	public void select(Spatial target) {
+		Selection sel = selected.get(target);
+
+		if(sel != null) { // Already selected
+			unselect(sel);
+			return;
+		}
+			
 		final Selection select = new Selection(target);
-		
-		selected.add(select);
+
+		selected.put(target, select);
+		Corax.listen(ArchidIndex.Selected, null, select);
 		
 		actionManager.record(new ActionSelect(select, new Callable<Void>() {
 
@@ -71,18 +91,47 @@ public final class SelectionManager {
 	}
 	
 	public void unselect(Spatial spatial) {
+		Selection select = selected.get(spatial);
 		
+		if(select != null) {
+			unselect(select);
+		}
+		else
+			_log.warn("Trying to select smth that dose not exist.", new RuntimeException());
 	}
 	
-	public void unselect(Selection select) {
-		
+	private void unselect(Selection select) {
+		selected.remove(select.getTarget());
+		Corax.listen(ArchidIndex.Unselected, null, select);
+	}
+
+	public void delete() {
+		claw.getAppplication().enqueue(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				
+				for (Selection sel : selected.values()) {
+					sel.getTarget().removeFromParent();
+					objectManager.delete(sel.objData);
+				}
+				selected.clear();
+				Corax.listen(ArchidIndex.DeleteSelected, null);
+				return null;
+			}
+		});
 	}
 	
 	public class Selection {
 		private final Spatial target;
+		private final ObjectData objData;
 		
 		public Selection(Spatial target) {
 			this.target = target;
+			
+			objData = objectManager.get(target);
+			
+			if(objData == null)
+				_log.warn("Trying to select something not registerd with ObjectManager");
 		}
 		
 		public Spatial getTarget() {
@@ -126,4 +175,42 @@ public final class SelectionManager {
 		}
 		
 	}
+
+	/**
+	 * SelectionManager
+	 */
+	public int count() {
+		return selected.size();
+	}
+
+	/* (non-Javadoc)
+	 * @see corvus.corax.event.listeners.CoraxAbstractListener#enabled()
+	 */
+	@Override
+	public void enabled() {
+	}
+
+	/* (non-Javadoc)
+	 * @see corvus.corax.event.listeners.CoraxAbstractListener#disabled()
+	 */
+	@Override
+	public void disabled() {
+	}
+
+	/* (non-Javadoc)
+	 * @see corvus.corax.event.listeners.CoraxListener#onEvent(int, corvus.corax.tools.MelloriObjectBuffer)
+	 */
+	@Override
+	public Object onEvent(int key, MelloriObjectBuffer buff) {
+		switch (key) {
+			case ArchidIndex.DeleteSelected:
+				//.getActionListeners()[0].actionPerformed(null)
+				break;
+			default:
+				break;
+		}
+		
+		return EventMonitor.Nothing;
+	}
+
 }

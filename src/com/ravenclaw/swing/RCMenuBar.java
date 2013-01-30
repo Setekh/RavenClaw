@@ -42,10 +42,13 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
 import com.jme3.input.FlyByCamera;
+import com.jme3.scene.Spatial;
 import com.ravenclaw.GroovyScriptManager;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.game.SceneGraph;
+import com.ravenclaw.managers.ObjectManager;
 import com.ravenclaw.swing.misc.S_RequestRestart;
+import com.ravenclaw.utils.FastGeoms;
 
 import corvus.corax.Corax;
 
@@ -139,7 +142,17 @@ public final class RCMenuBar extends JMenuBar {
 		
 		JMenu a_menu = new JMenu("Assets");
 		
-		JMenuItem a_test = new JMenuItem("Test");
+		JMenuItem a_test = new JMenuItem("Test Cube");
+		a_test.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Spatial spat = FastGeoms.genBoxGeometry(false);
+				RavenClaw rc = Corax.getInstance(RavenClaw.class);
+				ObjectManager manager = Corax.getInstance(ObjectManager.class);
+				manager.register(spat);
+				rc.getMainNode().attachChild(spat);
+			}
+		});
 		a_menu.add(a_test);
 
 		add(a_menu);

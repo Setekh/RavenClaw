@@ -31,20 +31,24 @@
  */
 package com.ravenclaw.utils;
 
+
 /**
  * @author Vlad
  */
 public final class ArchidIndex {
 
-	/**
-	 * Arguments: Application
-	 */
+	/** Arguments: Application */
 	public static final int RenderingStarted = 0x01;
 	
-	/**
-	 * Arguments: Dimension, JFrame 
-	 */
+	/** Arguments: Dimension, JFrame */
 	public static final int FrameResized = 0x00001;
+
+	/** Notify */
+	public static final int DeleteSelected = 0x0002;
+	/** Selection */
+	public static final int Selected = 0;
+	/** Selection */
+	public static final int Unselected = 0;
 	
 	public static String StartupTimeStamp = "Start_TimeStamp";
 }

@@ -77,6 +77,26 @@ public final class ObjectManager {
 		return od;
 	}
 	
+	public void delete(Spatial spat) {
+		ObjectData od = data.get(spat);
+		
+		if(od != null)
+			delete(od);
+		else
+			_log.warn("Cannot delete something not registerd or already deleted.");
+	}
+	
+	public void delete(ObjectData od) {
+		int size = od.holds.size();
+
+		for (int i = 0; i < size; i++) {
+			Spatial spat = od.holds.get(i);
+			data.remove(spat);
+		}
+		
+		od.clear();
+	}
+	
 	public class ObjectData {
 		
 		private final ArrayList<Spatial> holds;
@@ -92,12 +112,17 @@ public final class ObjectManager {
 		}
 		
 		public ObjectData(Spatial spat) {
+			
+			if(spat == null) {
+				throw new RuntimeException("ObjectData(Sptial): Spatial cannot be null!");
+			}
+			
 			if(spat instanceof Node) {
 				this.rootNode = (Node) spat;
 				holds = Utils.parseSpatials(rootNode);
 			}
 			else {
-				holds = null;
+				holds = new ArrayList<>();
 				holds.add(target = spat);
 			}
 
@@ -130,6 +155,12 @@ public final class ObjectManager {
 			process(this);
 		}
 		
+		public void clear() {
+			holds.clear();
+			target = null;
+			rootNode = null;
+		}
+
 		/**
 		 * @return the target
 		 */

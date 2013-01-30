@@ -33,16 +33,23 @@ package com.ravenclaw.managers.input;
 
 import java.text.DecimalFormat;
 
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
+
 import org.lwjgl.input.Mouse;
 
 import com.jme3.collision.CollisionResults;
+import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.scene.Spatial;
 import com.ravenclaw.managers.SelectionManager;
+import com.ravenclaw.swing.misc.S_ConfirmDeletion;
 import com.ravenclaw.utils.Utils;
 
 import corvus.corax.processing.annotation.Inject;
@@ -61,6 +68,7 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	@Override
 	protected void registerInputImpl() {
 		addInput("click", this, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+		addInput("delete", this, new KeyTrigger(KeyInput.KEY_DELETE));
 		
 		addInput("moveX+", this, new MouseAxisTrigger(MouseInput.AXIS_X, false));
 		addInput("moveX-", this, new MouseAxisTrigger(MouseInput.AXIS_X, true));
@@ -73,24 +81,30 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	 */
 	@Override
 	public void onAction(String name, boolean isPressed, float tpf) {
-		switch (name) {
-			case "click":
-				CollisionResults rz = Utils.pick(claw.getAppplication().getRootNode());
-				if(rz.size() > 0) {
-					Spatial target = rz.getClosestCollision().getGeometry();
-					
-					if(target != null)
-						selectionManager.select(target);
-					
+		
+		if(isPressed) {
+			switch (name) {
+				case "click": {
+					CollisionResults rz = Utils.pick(claw.getAppplication().getRootNode());
+					if(rz.size() > 0) {
+						Spatial target = rz.getClosestCollision().getGeometry();
+						
+						if(target != null)
+							selectionManager.select(target);
+					}
+					break;
 				}
-				
-				break;
-			default:
-				System.out.println("Unhandled: "+name);
-				break;
+				case "delete": {
+					SwingUtilities.invokeLater(new S_ConfirmDeletion());
+					break;
+				}
+				default:
+					System.out.println("Unhandled: "+name);
+					break;
+			}
 		}
 	}
-
+	
 	DecimalFormat frm = new DecimalFormat("#.###");
 	/* (non-Javadoc)
 	 * @see com.jme3.input.controls.AnalogListener#onAnalog(java.lang.String, float, float)
@@ -99,6 +113,8 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	public void onAnalog(String name, float value, float tpf) {
 
 		switch (name) {
+			case "click": case "delete":
+			break;
 			default:
 				System.out.println("Unhandled: "+name+" value = "+frm.format(value) + " X["+Mouse.getX()+"]Y["+Mouse.getY()+"]");
 				break;

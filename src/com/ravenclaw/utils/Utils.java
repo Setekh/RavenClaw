@@ -42,6 +42,7 @@ import com.jme3.collision.CollisionResults;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.ravenclaw.RavenClaw;
@@ -92,12 +93,16 @@ public class Utils {
 		return results;
 	}
 	
-	public static CollisionResult pickOne(Node node)
-	{
+	public static CollisionResult pickOne(Node node) {
 		SceneGraph claw = Corax.getInstance(RavenClaw.class).getAppplication();
+		return pickOne(claw.getCamera(), node);
+	}
+	
+	public static CollisionResult pickOne(Camera cam, Node node)
+	{
 		Vector2f v = new Vector2f(Mouse.getX(), Mouse.getY());
-		Vector3f pos = claw.getCamera().getWorldCoordinates(v, 0.0f);
-		Vector3f dir = claw.getCamera().getWorldCoordinates(v, 0.3f);
+		Vector3f pos = cam.getWorldCoordinates(v, 0.0f);
+		Vector3f dir = cam.getWorldCoordinates(v, 0.3f);
 		dir.subtractLocal(pos).normalizeLocal();
 
 		Ray r = new Ray(pos, dir);

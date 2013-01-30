@@ -49,7 +49,7 @@ public final class FastGeoms {
 	private static int fastGeom;
 	
 	@Inject
-	private static AssetManager assetManager;
+	public static AssetManager assetManager;
 	
 	@Initiate
 	public void load() {
@@ -57,10 +57,10 @@ public final class FastGeoms {
 	}
 	
 	public static Geometry genBoxGeometry(boolean shaded) {
-		Geometry geo = new Geometry("FastGeometry["+(fastGeom++)+"]", new Box(1, 1, 1));
+		Geometry geo = new Geometry("FastGeometry["+(fastGeom++)+"]", new Box(.5f, .5f, .5f));
 		Material material = new Material(assetManager, shaded ? "Common/MatDefs/Light/Lighting.j3md" : "Common/MatDefs/Misc/Unshaded.j3md");
 		if(!shaded)
-			material.setColor("Color", ColorRGBA.Green);
+			material.setColor("Color", ColorRGBA.randomColor());
 		else {
 			material.setBoolean("UseMaterialColors", true);
 			material.setColor("Diffuse", ColorRGBA.Green);

@@ -40,9 +40,11 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.ravenclaw.GroovyScriptManager;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.managers.InputStateManager;
+import com.ravenclaw.managers.ObjectManager;
 import com.ravenclaw.utils.ArchidIndex;
 import com.ravenclaw.utils.FastGeoms;
 
@@ -75,7 +77,11 @@ public class StartedRendering extends AbstractAppState {
 			CorvusConfig.addProperty(ArchidIndex.StartupTimeStamp, System.currentTimeMillis());
 			System.out.println("Startin: TimeStamp = "+CorvusConfig.getProperty(ArchidIndex.StartupTimeStamp, -1));
 			
-			main.attachChild(FastGeoms.genBoxGeometry(false));
+			Spatial spat = FastGeoms.genBoxGeometry(false);
+			
+			ObjectManager manager = Corax.getInstance(ObjectManager.class);
+			manager.register(spat);
+			main.attachChild(spat);
 		}
 		
 		SimpleApplication sapp = (SimpleApplication) app;
@@ -102,6 +108,11 @@ public class StartedRendering extends AbstractAppState {
 		
 		// Init the tools
 		Corax.getInstance(InputStateManager.class);
-		GroovyScriptManager.getInstance().load("SceneNavigator.gcy");
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				GroovyScriptManager.getInstance().load("SceneNavigator.gcy");
+			}
+		}).start(); // No rush
 	}
 }

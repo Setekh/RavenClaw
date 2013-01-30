@@ -29,60 +29,41 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.ravenclaw.managers;
+package com.ravenclaw.swing.misc;
 
-import javolution.util.FastList;
+import javax.swing.JOptionPane;
 
-import org.apache.log4j.Logger;
+import com.ravenclaw.RavenClaw;
+import com.ravenclaw.managers.SelectionManager;
+
+import corvus.corax.Corax;
 
 /**
  * @author Vlad
- * Undo/Redo
  */
-public final class ActionManager {
+public class S_ConfirmDeletion implements Runnable {
 
-	private static Logger _log = Logger.getLogger(ActionManager.class);
+	private final RavenClaw claw;
+	private final SelectionManager selectionManager;
 
-	private FastList<UseAction> actions = new FastList<>();
+	public S_ConfirmDeletion() {
+		this.selectionManager = Corax.getInstance(SelectionManager.class);
+		claw = Corax.getInstance(RavenClaw.class);
+	}
 
-	public void record(UseAction action) {
-		try {
-			action.action();
-			actions.add(action);
-		} catch (Exception e) {
-			_log.warn("Failed achiveing action[" + action.getName() + "]: ", e);
-		}
-	}
-	
-	public void undo(UseAction action) {
-		action.undoAction();
-	}
-	
-	public void redo(UseAction action) {
-		action.action();
-	}
-	
-	public void undoLast() {
-		UseAction action = actions.removeLast();
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		int count = selectionManager.count();
+		int rez = JOptionPane.showConfirmDialog(claw.getCanvas(), "Are you sure you want to delete "+count+" object(s)?", "Confirm Deletion", JOptionPane.OK_CANCEL_OPTION);
 		
-		if(action != null) {
-			undo(null);
-		}
-		
-	}
-
-	public void redoLast() {
-		UseAction action = actions.removeLast();
-		
-		if(action != null) {
-			redo(null);
+		switch (rez) {
+			case 0:
+				selectionManager.delete();
+				break;
 		}
 	}
 
-	public static interface UseAction {
-		public void action();
-		public void undoAction();
-		public boolean isUndone();
-		public String getName();
-	}
 }
