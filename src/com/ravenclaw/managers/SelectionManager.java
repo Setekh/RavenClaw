@@ -106,7 +106,7 @@ public final class SelectionManager implements CoraxListener {
 	}
 
 	public void delete() {
-		claw.getAppplication().enqueue(new Callable<Void>() {
+		claw.getApplication().enqueue(new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
 				
@@ -154,7 +154,7 @@ public final class SelectionManager implements CoraxListener {
 		@Override
 		public void action() {
 			RavenClaw cw = Corax.getInstance(RavenClaw.class);
-			cw.getAppplication().enqueue(callable);
+			cw.getApplication().enqueue(callable);
 		}
 
 		@Override

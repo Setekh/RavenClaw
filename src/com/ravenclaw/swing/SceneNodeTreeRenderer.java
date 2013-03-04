@@ -50,10 +50,11 @@ public class SceneNodeTreeRenderer extends DefaultTreeCellRenderer {
 	private final FastMap<Class<?>[], BufferedImage> icons = new FastMap<Class<?>[], BufferedImage>();
 	
 	public SceneNodeTreeRenderer() {
-	    setBackgroundNonSelectionColor(Color.lightGray);
-//	    setBackgroundSelectionColor(Color.ORANGE);
-//	    setTextNonSelectionColor(Color.RED);
-//	    setTextSelectionColor(Color.BLUE);
+		//setBackground(Color.GRAY);
+	    //setBackgroundNonSelectionColor(Color.GRAY);
+	    //setBackgroundSelectionColor(Color.ORANGE);
+	    //setTextNonSelectionColor(Color.RED);
+	    //setTextSelectionColor(Color.BLUE);
 		try {
 			BufferedImage img = ImageIO.read(getClass().getResourceAsStream("/Icons/animationcontrol.gif"));
 			addIcons(img, AnimControl.class);

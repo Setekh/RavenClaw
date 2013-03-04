@@ -79,7 +79,7 @@ public class Utils {
 
 	public static CollisionResults pick(Node node)
 	{
-		SceneGraph claw = Corax.getInstance(RavenClaw.class).getAppplication();
+		SceneGraph claw = Corax.getInstance(RavenClaw.class).getApplication();
 		Vector2f v = new Vector2f(Mouse.getX(), Mouse.getY());
 		Vector3f pos = claw.getCamera().getWorldCoordinates(v, 0.0f);
 		Vector3f dir = claw.getCamera().getWorldCoordinates(v, 0.3f);
@@ -94,7 +94,7 @@ public class Utils {
 	}
 	
 	public static CollisionResult pickOne(Node node) {
-		SceneGraph claw = Corax.getInstance(RavenClaw.class).getAppplication();
+		SceneGraph claw = Corax.getInstance(RavenClaw.class).getApplication();
 		return pickOne(claw.getCamera(), node);
 	}
 	
@@ -112,8 +112,12 @@ public class Utils {
 		
 		return results.getClosestCollision();
 	}
-
+	
 	public static ArrayList<Spatial> parseSpatials(Node node) {
+		return parseSpatials(node, false);
+	}
+	
+	public static ArrayList<Spatial> parseSpatials(Node node, boolean withNodes) {
 		ArrayList<Spatial> array = new ArrayList<>();
 		
 		int size = node.getChildren().size();
@@ -122,9 +126,12 @@ public class Utils {
 			Spatial spat = node.getChild(i);
 			
 			if(spat instanceof Node) {
-				ArrayList<Spatial> list = parseSpatials((Node) spat);
+				ArrayList<Spatial> list = parseSpatials((Node) spat, withNodes);
 				array.addAll(list);
 				list.clear();
+				
+				if(withNodes)
+					array.add(spat);
 			}
 			else
 				array.add(spat);

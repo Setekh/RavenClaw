@@ -31,26 +31,12 @@
  */
 package com.ravenclaw.swing;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
-import javax.swing.SwingUtilities;
 
-import com.jme3.input.FlyByCamera;
-import com.jme3.scene.Spatial;
-import com.ravenclaw.GroovyScriptManager;
-import com.ravenclaw.RavenClaw;
-import com.ravenclaw.game.SceneGraph;
-import com.ravenclaw.managers.ObjectManager;
-import com.ravenclaw.swing.misc.S_RequestRestart;
-import com.ravenclaw.utils.FastGeoms;
-
-import corvus.corax.Corax;
+import com.ravenclaw.swing.misc.MenuBarButtonListener;
 
 /**
  * @author Vlad
@@ -59,10 +45,21 @@ public final class RCMenuBar extends JMenuBar {
 
 	private static final long serialVersionUID = 7505987949704493445L;
 
+	private final MenuBarButtonListener actionListener = new MenuBarButtonListener();
+	
 	public RCMenuBar() {
 		JMenu f_menu = new JMenu("File");
 		
+		JMenuItem fm_options = new JMenuItem("Options");
+		fm_options.setActionCommand("options");
+		fm_options.addActionListener(actionListener);
+		f_menu.add(fm_options);
+
+		f_menu.add(new JSeparator());
+		
 		JMenuItem fm_exit = new JMenuItem("Exit");
+		fm_exit.setActionCommand("exit");
+		fm_exit.addActionListener(actionListener);
 		f_menu.add(fm_exit);
 
 		add(f_menu);
@@ -70,32 +67,13 @@ public final class RCMenuBar extends JMenuBar {
 		JMenu vp_menu = new JMenu("View Port");
 		
 		JMenuItem vp_r_restart = new JMenuItem("Restart");
-		vp_r_restart.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				RavenClaw rc = Corax.getInstance(RavenClaw.class);
-				SwingUtilities.invokeLater(new S_RequestRestart(rc));
-			}
-		});
+		vp_r_restart.setActionCommand("restartVP");
+		vp_r_restart.addActionListener(actionListener);
 		vp_menu.add(vp_r_restart);
 
 		JMenuItem vp_explorer = new JMenuItem("Explorer");
-		vp_explorer.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				//RavenClaw rc = Corax.getInstance(RavenClaw.class);
-				//SwingUtilities.invokeLater(new S_RequestRestart(rc));
-				SwingUtilities.invokeLater(new Runnable() {
-					
-					@Override
-					public void run() {
-						System.out.println("Starting");
-						GroovyScriptManager.getInstance().load("SceneNavigator.gcy");
-						System.out.println("Ended");
-					}
-				});
-			}
-		});
+		vp_explorer.setActionCommand("reloadExp");
+		vp_explorer.addActionListener(actionListener);
 		vp_menu.add(vp_explorer);
 		
 		vp_menu.add(new JSeparator());
@@ -103,38 +81,14 @@ public final class RCMenuBar extends JMenuBar {
 		JMenu vp_camera = new JMenu("Camera");
 
 		final JMenuItem vp_ca_onoff = new JMenuItem("FlyCam on/off");
-		vp_ca_onoff.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				RavenClaw rc = Corax.getInstance(RavenClaw.class);
-				
-				SceneGraph app = rc.getAppplication();
-				FlyByCamera cam = app.getFlyByCamera();
-				cam.setEnabled(!cam.isEnabled());
-				
-				if(cam.isEnabled())
-					vp_ca_onoff.setForeground(Color.BLACK);
-				else
-					vp_ca_onoff.setForeground(Color.RED);
-			}
-		});
+		vp_ca_onoff.setActionCommand("flyCamOnOff");
+		vp_ca_onoff.addActionListener(actionListener);
 		vp_camera.add(vp_ca_onoff);
+		
 		final JMenuItem vp_ca_dragToRotate = new JMenuItem("FlyCam DTRotate");
-		vp_ca_dragToRotate.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				RavenClaw rc = Corax.getInstance(RavenClaw.class);
-				
-				SceneGraph app = rc.getAppplication();
-				FlyByCamera cam = app.getFlyByCamera();
-				cam.setDragToRotate(!cam.isDragToRotate());
-				
-				if(cam.isEnabled())
-					vp_ca_dragToRotate.setForeground(Color.BLACK);
-				else
-					vp_ca_dragToRotate.setForeground(Color.RED);
-			}
-		});
+		vp_ca_dragToRotate.setActionCommand("flyCamDRotate");
+		vp_ca_dragToRotate.addActionListener(actionListener);
+
 		vp_camera.add(vp_ca_dragToRotate);
 		vp_menu.add(vp_camera);
 
@@ -143,16 +97,8 @@ public final class RCMenuBar extends JMenuBar {
 		JMenu a_menu = new JMenu("Assets");
 		
 		JMenuItem a_test = new JMenuItem("Test Cube");
-		a_test.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Spatial spat = FastGeoms.genBoxGeometry(false);
-				RavenClaw rc = Corax.getInstance(RavenClaw.class);
-				ObjectManager manager = Corax.getInstance(ObjectManager.class);
-				manager.register(spat);
-				rc.getMainNode().attachChild(spat);
-			}
-		});
+		a_test.setActionCommand("addTestCube");
+		a_test.addActionListener(actionListener);
 		a_menu.add(a_test);
 
 		add(a_menu);

@@ -33,6 +33,7 @@ package com.ravenclaw;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
@@ -42,9 +43,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Callable;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
@@ -53,15 +56,14 @@ import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeCanvasContext;
-import com.jme3.system.JmeSystem;
 import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.swing.CanvasFocusListener;
 import com.ravenclaw.swing.ContentPanel;
 import com.ravenclaw.swing.RCMenuBar;
 import com.ravenclaw.utils.ArchidIndex;
-import com.sun.java.swing.plaf.windows.WindowsLookAndFeel;
 
 import corvus.corax.Corax;
 import corvus.corax.processing.annotation.Initiate;
@@ -73,7 +75,6 @@ public final class RavenClaw {
 
 	private static final Logger _log = Logger.getLogger(RavenClaw.class);
 
-	private final JFrame frame = new JFrame("Raven Claw");
 	private Canvas canvas;
 	private SceneGraph app;
 
@@ -81,7 +82,25 @@ public final class RavenClaw {
 
 	private ContentPanel contentpanel;
 
+	private final JFrame frame;
+	
+	@SuppressWarnings("serial")
 	public RavenClaw() {
+		frame = new JFrame("Raven Claw") {
+			public void dispose() {
+				
+				int ret = JOptionPane.showConfirmDialog(Corax.getInstance(RavenClaw.class).getFrame(),
+						"Are you sure you want to exit?", "Confirm Exit", JOptionPane.OK_CANCEL_OPTION);
+				
+				if(ret == 0) { // OK
+					super.dispose();
+
+					System.out.println("Good bye.");
+					System.exit(0);
+				}
+			};
+		};
+		
 		createFrame();
 	}
 	
@@ -116,7 +135,7 @@ public final class RavenClaw {
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 
 		frame.setSize((int)(size.width / 1.23), (int) (size.height / 1.23));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 	
 	@Initiate
@@ -124,6 +143,7 @@ public final class RavenClaw {
 		Corax corax = Corax.instance();
 
 		if (app != null) {
+			mainNode.removeFromParent();
 			app.stop(true);
 			frame.remove(canvas);
 			corax.disposeInstance(app);
@@ -162,22 +182,25 @@ public final class RavenClaw {
 			}
 		}
 
+        app.setPauseOnLostFocus(false);
 		app.createCanvas();
 		app.startCanvas();
 
 		canvas = ((JmeCanvasContext)app.getContext()).getCanvas();
 		canvas.addFocusListener(new CanvasFocusListener());
 
+		
 		canvas.setMinimumSize(new Dimension((int)(settings.getWidth() / 1.23), (int)(settings.getHeight() / 1.23)));
 		canvas.setPreferredSize(new Dimension((int) (size.width / 1.23), (int) (size.height / 1.23)));
 		
+		canvas.setBackground(Color.DARK_GRAY);
 		contentpanel.load(canvas);
-		//frame.add(canvas, BorderLayout.CENTER);
-		//setAlwaysOnTop(true);
 		
-		// Needs to be here, since low permision flag means the native libs wont be extracted at startup
-		// and native bullet wont run.
-		JmeSystem.setLowPermissions(true);
+		ContentPanel cp = (ContentPanel)getFrame().getContentPane();
+		cp.parseRootNode();
+
+		frame.setVisible(true);
+
 	}
 
 	/**
@@ -204,19 +227,20 @@ public final class RavenClaw {
 	/**
 	 * @return the app
 	 */
-	public SceneGraph getAppplication() {
+	public SceneGraph getApplication() {
 		return app;
 	}
 	
 	public static void main(String[] args) throws Exception {
-		
+		// Remember to disable it at first if running in eclipse, so all the needed dependences get extracted.
+		//JmeSystem.setLowPermissions(true);
+
 		try
 		{
 			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 			ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
 
-			UIManager.setLookAndFeel(new WindowsLookAndFeel());
-			//UIManager.setLookAndFeel(new NimbusLookAndFeel());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -235,6 +259,22 @@ public final class RavenClaw {
 			e.printStackTrace();
 		}
 	}
+
+	/** 
+	 * Recommended to add spatials from this method, so the listener can trigger an event
+	 */
+	public void attachChild(final Spatial spat) {
+		getApplication().enqueue(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				getMainNode().attachChild(spat);
+				Corax.monitor().listen(ArchidIndex.NewEntity, null, spat);
+				return null;
+			}
+		});
+	}
 	
-	
+	public static void safety(Callable<Void> voids) {
+		Corax.getInstance(RavenClaw.class).getApplication().enqueue(voids);
+	}
 }

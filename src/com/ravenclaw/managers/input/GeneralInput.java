@@ -33,11 +33,7 @@ package com.ravenclaw.managers.input;
 
 import java.text.DecimalFormat;
 
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-
-import org.lwjgl.input.Mouse;
 
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
@@ -85,7 +81,7 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 		if(isPressed) {
 			switch (name) {
 				case "click": {
-					CollisionResults rz = Utils.pick(claw.getAppplication().getRootNode());
+					CollisionResults rz = Utils.pick(claw.getMainNode());
 					if(rz.size() > 0) {
 						Spatial target = rz.getClosestCollision().getGeometry();
 						
@@ -99,7 +95,7 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 					break;
 				}
 				default:
-					System.out.println("Unhandled: "+name);
+					//System.out.println("Unhandled: "+name);
 					break;
 			}
 		}
@@ -116,7 +112,7 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 			case "click": case "delete":
 			break;
 			default:
-				System.out.println("Unhandled: "+name+" value = "+frm.format(value) + " X["+Mouse.getX()+"]Y["+Mouse.getY()+"]");
+				//System.out.println("Unhandled: "+name+" value = "+frm.format(value) + " X["+Mouse.getX()+"]Y["+Mouse.getY()+"]");
 				break;
 		}
 	}

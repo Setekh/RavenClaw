@@ -39,12 +39,13 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.input.FlyByCamera;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.ravenclaw.GroovyScriptManager;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.managers.InputStateManager;
 import com.ravenclaw.managers.ObjectManager;
+import com.ravenclaw.swing.ContentPanel;
 import com.ravenclaw.utils.ArchidIndex;
 import com.ravenclaw.utils.FastGeoms;
 
@@ -103,16 +104,16 @@ public class StartedRendering extends AbstractAppState {
 			app.getInputManager().addListener(cam, "FLYCAM_RotateDrag");
 
 			cam.setDragToRotate(true);
+			cam.setMoveSpeed(cam.getMoveSpeed() * 1.7f);
 			//cam.setEnabled(false);
 		}
+
+		app.getCamera().setLocation(new Vector3f(8.80987f, 6.771959f, 15.176244f));
+		app.getCamera().lookAtDirection(Vector3f.ZERO.subtract(app.getCamera().getLocation()).normalizeLocal(), app.getCamera().getUp());
 		
 		// Init the tools
 		Corax.getInstance(InputStateManager.class);
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				GroovyScriptManager.getInstance().load("SceneNavigator.gcy");
-			}
-		}).start(); // No rush
+		ContentPanel cp = (ContentPanel)cw.getFrame().getContentPane();
+		cp.parseRootNode();
 	}
 }

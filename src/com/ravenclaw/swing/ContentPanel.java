@@ -32,10 +32,13 @@
 package com.ravenclaw.swing;
 
 import java.awt.Canvas;
+import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+
+import javolution.util.FastMap;
 
 /**
  * @author Vlad
@@ -46,7 +49,9 @@ public class ContentPanel extends JSplitPane {
 	private CenterPanel center = new CenterPanel();
 	private RightPanel right = new RightPanel();
 	private BottomPanel bottom = new BottomPanel();
-			
+
+	private static final FastMap<String, Component> registeredComponents = new FastMap<>();
+	
 	public ContentPanel() {
 		super(HORIZONTAL_SPLIT);
 		add(center, LEFT);
@@ -58,15 +63,48 @@ public class ContentPanel extends JSplitPane {
 	public void load(Canvas canvas) {
 		center.canvas = canvas;
 		
+		canvas.setName("Render Canvas");
+
+		registerComponent(canvas.getName(), canvas);
+		
 		center.add(canvas, TOP);
 	}
 	
+	public static void registerComponent(Class<?> type, Component comp) {
+		registerComponent(type.getSimpleName(), comp);
+	}
+	
+	public static void registerComponent(String name, Component comp) {
+
+		if(comp.getName() == null)
+			comp.setName(name);
+		
+		Component old = registeredComponents.put(name, comp);
+		
+		if(old != null) {
+			// Do smth?
+		}
+	}
+
+	/**
+	 * This works only for components with the name of it's class name
+	 */
+	public static <T extends Component> T getRegisteredComponent(Class<T> type) {
+		return getRegisteredComponent(type.getSimpleName());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T extends Component> T getRegisteredComponent(String name) {
+		return (T) registeredComponents.get(name);
+	}
+
 	/**
 	 * @return the bottom
 	 */
 	public BottomPanel getBottom() {
 		return bottom;
 	}
+
 	public class CenterPanel extends JSplitPane {
 		public Canvas canvas;
 
@@ -77,15 +115,25 @@ public class ContentPanel extends JSplitPane {
 	}
 
 	public class RightPanel extends JPanel {
-		
 		{{ setPreferredSize(new Dimension(100, 100)); }}
 		{{ setMaximumSize(new Dimension(200, 200)); }}
 	}
 
 	public class BottomPanel extends JSplitPane {
-		
-		
 		{{ setPreferredSize(new Dimension(100, 100)); }}
 		{{ setMaximumSize(new Dimension(200, 200)); }}
+	}
+
+	public void parseRootNode() {
+		SceneNavigator naviagtor = getRegisteredComponent(SceneNavigator.class);
+		
+		if(naviagtor == null) {
+			SceneNavigator navi = new SceneNavigator();
+			bottom.add(navi, JSplitPane.LEFT);
+
+			registerComponent(navi.getClass(), navi);
+		}
+		else
+			naviagtor.reload();
 	}
 }

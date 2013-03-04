@@ -44,11 +44,14 @@ public final class ArchidIndex {
 	public static final int FrameResized = 0x00001;
 
 	/** Notify */
-	public static final int DeleteSelected = 0x0002;
+	public static final int DeleteSelected = 0x0001;
 	/** Selection */
-	public static final int Selected = 0;
+	public static final int Selected = 0x0002;
 	/** Selection */
-	public static final int Unselected = 0;
+	public static final int Unselected = 0x0003;
+
+	/** Spatial **/
+	public static final int NewEntity = 0;
 	
 	public static String StartupTimeStamp = "Start_TimeStamp";
 }
