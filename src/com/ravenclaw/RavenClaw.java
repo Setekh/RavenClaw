@@ -34,7 +34,10 @@ package com.ravenclaw;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -46,6 +49,7 @@ import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import javax.imageio.ImageIO;
+import javax.swing.FocusManager;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -63,10 +67,12 @@ import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.swing.CanvasFocusListener;
 import com.ravenclaw.swing.ContentPanel;
 import com.ravenclaw.swing.RCMenuBar;
+import com.ravenclaw.swing.ToolBar;
 import com.ravenclaw.utils.ArchidIndex;
 
 import corvus.corax.Corax;
 import corvus.corax.processing.annotation.Initiate;
+import corvus.corax.processing.annotation.Provide;
 
 /**
  * @author Seth
@@ -119,8 +125,16 @@ public final class RavenClaw {
 
 		frame.setJMenuBar(new RCMenuBar());
 		frame.setLayout(new BorderLayout());
-		frame.add(new JPanel(), BorderLayout.NORTH);
-		frame.setContentPane(contentpanel = new ContentPanel());
+
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(new ToolBar(), BorderLayout.NORTH);
+		
+		contentpanel = new ContentPanel();
+		panel.add(contentpanel, BorderLayout.CENTER);
+		
+		//frame.setContentPane(contentpanel);
+		frame.setContentPane(panel);
+		
 		frame.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -189,15 +203,13 @@ public final class RavenClaw {
 		canvas = ((JmeCanvasContext)app.getContext()).getCanvas();
 		canvas.addFocusListener(new CanvasFocusListener());
 
-		
+
 		canvas.setMinimumSize(new Dimension((int)(settings.getWidth() / 1.23), (int)(settings.getHeight() / 1.23)));
 		canvas.setPreferredSize(new Dimension((int) (size.width / 1.23), (int) (size.height / 1.23)));
 		
 		canvas.setBackground(Color.DARK_GRAY);
 		contentpanel.load(canvas);
-		
-		ContentPanel cp = (ContentPanel)getFrame().getContentPane();
-		cp.parseRootNode();
+		contentpanel.parseRootNode();
 
 		frame.setVisible(true);
 
@@ -227,10 +239,15 @@ public final class RavenClaw {
 	/**
 	 * @return the app
 	 */
+	@Provide
 	public SceneGraph getApplication() {
 		return app;
 	}
 	
+	public ContentPanel getContentPane() {
+		return contentpanel;
+	}
+
 	public static void main(String[] args) throws Exception {
 		// Remember to disable it at first if running in eclipse, so all the needed dependences get extracted.
 		//JmeSystem.setLowPermissions(true);
@@ -277,4 +294,25 @@ public final class RavenClaw {
 	public static void safety(Callable<Void> voids) {
 		Corax.getInstance(RavenClaw.class).getApplication().enqueue(voids);
 	}
+	
+	/**
+	 * Returns true if the canvas is in mouse focus
+	 */
+	public static boolean checkFocus() {
+		RavenClaw claw = Corax.getInstance(RavenClaw.class);
+		Point xy = MouseInfo.getPointerInfo().getLocation();
+		
+		if(FocusManager.getCurrentManager().getActiveWindow() != null) {// Another window in focus
+			//System.out.println("Returning False");
+			return false;
+		}
+			
+		Component comp = claw.contentpanel.findComponentAt(xy);
+//		if(comp != null)
+//			System.out.println("Current Component in view: "+comp.getClass().getSimpleName());
+//		else
+//			System.out.println("Comp Null");
+		return comp == claw.getCanvas();
+	}
+
 }

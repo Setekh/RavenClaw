@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="jEdit"/>
 	<classpathentry kind="src" path="assets"/>
 	<classpathentry kind="src" path="binary"/>
-	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="src" path="scripting"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jme3wr"/>
+	<classpathentry kind="src" path="tests"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Corvus Engine 4"/>
 	<classpathentry kind="lib" path="libs/commons-io-2.3.jar"/>
-	<classpathentry kind="lib" path="libs/javolution-5.5.1.jar"/>
 	<classpathentry kind="lib" path="libs/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="libs/netty-3.3.1.Final.jar"/>
-	<classpathentry kind="lib" path="C:/jEdit/jedit.jar"/>
-	<classpathentry kind="lib" path="libs/javadocking.jar" sourcepath="libs/javadocking.zip"/>
+	<classpathentry kind="lib" path="libs/javadocking.jar" sourcepath="libs/javadocking2.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="libs/lwjgl_util.jar"/>
-	<classpathentry kind="lib" path="/jme3wr/lib/lwjgl/lwjgl.jar"/>
 	<classpathentry kind="lib" path="libs/groovy-all-2.1.0.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jme3"/>
+	<classpathentry kind="lib" path="/jme3/lib/lwjgl/lwjgl-debug.jar"/>
+	<classpathentry kind="lib" path="/jme3/lib/lwjgl/lwjgl.jar"/>
+	<classpathentry kind="lib" path="libs/tonegod.gui.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/Raven Claw 2/libs/tonegodGUI-javadoc.zip!/tonegod"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/javolution-5.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/swingx-all-1.6.4.jar" sourcepath="libs/swingx-all-1.6.4-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

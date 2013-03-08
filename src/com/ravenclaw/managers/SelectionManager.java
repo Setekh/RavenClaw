@@ -33,10 +33,13 @@ package com.ravenclaw.managers;
 
 import java.util.concurrent.Callable;
 
-import javolution.util.FastMap;
+import javolution.util.FastList;
 
 import org.apache.log4j.Logger;
 
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.managers.ActionManager.UseAction;
@@ -56,7 +59,7 @@ public final class SelectionManager implements CoraxListener {
 
 	private static final Logger _log = Logger.getLogger(SelectionManager.class);
 	
-	private FastMap<Spatial, Selection> selected = new FastMap<Spatial, Selection>();
+	private final FastList<Selection> selected = new FastList<Selection>().shared();
 
 	@Inject
 	private RavenClaw claw;
@@ -67,31 +70,87 @@ public final class SelectionManager implements CoraxListener {
 	@Inject
 	private ObjectManager objectManager;
 	
-	public void select(Spatial target) {
-		Selection sel = selected.get(target);
+    private Transform selectionCenter;
 
-		if(sel != null) { // Already selected
-			unselect(sel);
-			return;
-		}
-			
-		final Selection select = new Selection(target);
+    public void calculateSelectionCenter() {
+        if (selected.isEmpty()) {
+            selectionCenter = null;
+        }
+        else if (selected.size() == 1) {
+        	ObjectData objData = selected.get(0).objData;
+            Spatial nd = objData.getMaster();
+            selectionCenter = nd.getWorldTransform().clone();
+        }
+        else if (selected.size() > 1) {
 
-		selected.put(target, select);
-		Corax.listen(ArchidIndex.Selected, null, select);
+            if (selectionCenter == null) {
+                selectionCenter = new Transform();
+            }
+
+            // FIND CENTROID OF center POSITION
+            Vector3f centerPosition = new Vector3f();
+            for (Selection ID : selected) {
+//                // POSITION
+                Spatial ndPos = ID.objData.getMaster();
+                centerPosition.addLocal(ndPos.getWorldTranslation());
+            }
+            
+            centerPosition.divideLocal(selected.size());
+            selectionCenter.setTranslation(centerPosition);
+
+            // Rotation of the last selected is Local Rotation (like in Blender)
+            Quaternion rot = selected.get(selected.size() - 1).getObjData().getMaster().getLocalRotation();
+            selectionCenter.setRotation(rot); //Local coordinates of the last object            
+        }
+    }
+
+	/**
+	 * @return the selectionCenter
+	 */
+	public Transform getSelectionCenter() {
+		return selectionCenter;
+	}
+	
+	/**
+	 * @return the selected
+	 */
+	public FastList<Selection> getSelected() {
+		return selected;
+	}
+	
+	public void select(Spatial target, boolean isShiftPressed) {
+	
+		Selection select = getBySpatial(target);
 		
-		actionManager.record(new ActionSelect(select, new Callable<Void>() {
-
-			@Override
-			public Void call() throws Exception {
-				System.out.println("Selected: "+select.getTarget());
-				return null;
+		if (select != null) {
+			
+			if(isShiftPressed) {
+				unselect(select);
 			}
-		}));
+			else {
+				selected.clear();
+				selected.add(select);
+			}
+		}
+		else {
+			select = new Selection(target);
+
+			if(isShiftPressed) {
+				selected.add(select);
+			}
+			else {
+				selected.clear();
+				selected.add(select);
+			}
+		}
+
+		Corax.listen(ArchidIndex.Selected, null, select);
+		calculateSelectionCenter();
+		Corax.getInstance(TransformManager.class).updateCursor();
 	}
 	
 	public void unselect(Spatial spatial) {
-		Selection select = selected.get(spatial);
+		Selection select = getBySpatial(spatial);
 		
 		if(select != null) {
 			unselect(select);
@@ -100,8 +159,23 @@ public final class SelectionManager implements CoraxListener {
 			_log.warn("Trying to select smth that dose not exist.", new RuntimeException());
 	}
 	
+	public void unselectAll() {
+		for (int i = 0; i < selected.size(); i++) {
+			unselect(selected.get(i));
+		}
+	}
+	
 	private void unselect(Selection select) {
-		selected.remove(select.getTarget());
+		
+		if(select == null)
+			return;
+		
+		selected.remove(select);
+		System.out.println("Unselected "+select);
+
+		calculateSelectionCenter();
+		Corax.getInstance(TransformManager.class).updateCursor();
+
 		Corax.listen(ArchidIndex.Unselected, null, select);
 	}
 
@@ -110,11 +184,16 @@ public final class SelectionManager implements CoraxListener {
 			@Override
 			public Void call() throws Exception {
 				
-				for (Selection sel : selected.values()) {
+				for (Selection sel : selected) {
 					sel.getTarget().removeFromParent();
 					objectManager.delete(sel.objData);
 				}
+
 				selected.clear();
+				
+				calculateSelectionCenter();
+				Corax.getInstance(TransformManager.class).updateCursor();
+
 				Corax.listen(ArchidIndex.DeleteSelected, null);
 				return null;
 			}
@@ -123,7 +202,7 @@ public final class SelectionManager implements CoraxListener {
 	
 	public class Selection {
 		private final Spatial target;
-		private final ObjectData objData;
+		protected final ObjectData objData;
 		
 		public Selection(Spatial target) {
 			this.target = target;
@@ -137,9 +216,16 @@ public final class SelectionManager implements CoraxListener {
 		public Spatial getTarget() {
 			return target;
 		}
+		
+		/**
+		 * @return the objData
+		 */
+		public ObjectData getObjData() {
+			return objData;
+		}
 	}
 	
-	public static class ActionSelect implements UseAction {
+	public class ActionSelect implements UseAction {
 
 		private final Selection select;
 		private final Callable<Void> callable;
@@ -161,6 +247,7 @@ public final class SelectionManager implements CoraxListener {
 		public void undoAction() {
 			SelectionManager cw = Corax.getInstance(SelectionManager.class);
 			cw.unselect(select);
+			
 			isUndone = true;
 		}
 
@@ -176,6 +263,20 @@ public final class SelectionManager implements CoraxListener {
 		
 	}
 
+	public Selection getBySpatial(Spatial target) {
+		
+		for (int i = 0; i < selected.size(); i++) {
+			Selection sel = selected.get(i);
+			
+			if(sel != null) { // Not sure if fastlist reorder.
+				if(sel.getObjData().getTarget() == target || sel.getObjData().getHolds().contains(target))
+					return sel;
+			}
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * SelectionManager
 	 */

@@ -7,34 +7,34 @@ package com.ravenclaw.managers;
 
 import javolution.util.FastMap;
 
-import com.ravenclaw.RavenClaw;
 import com.ravenclaw.managers.input.GeneralInput;
 import com.ravenclaw.managers.input.RavenClawInput;
 
 import corvus.corax.Corax;
 import corvus.corax.processing.annotation.Initiate;
-import corvus.corax.processing.annotation.Inject;
 
 /**
  * @author Seth
  */
 public final class InputStateManager
 {
-	@Inject
-	private RavenClaw _claw;
+//	@Inject
+//	private RavenClaw _claw;
 	
-	private final FastMap<Class<?>, RavenClawInput> _data = FastMap.newInstance();
+	private final FastMap<Class<?>, RavenClawInput> _data = new FastMap<>();
 	
 	@Initiate
 	public void initiate() {
 		// Add this inputs later
 		addInput(new GeneralInput(), true);
+		
+		
 	}
 
 	public void addInput(RavenClawInput rci, boolean loadNow) {
 		_data.put(rci.getClass(), rci);
 
-		Corax.instance().processDependancy(rci);
+		Corax.pDep(rci);
 
 		if(loadNow)
 			rci.registerInput();

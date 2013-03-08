@@ -5,9 +5,8 @@
  */
 package com.ravenclaw.managers.input;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
-
-import javolution.util.FastList;
 
 import com.jme3.input.InputManager;
 import com.jme3.input.controls.InputListener;
@@ -31,7 +30,7 @@ public abstract class RavenClawInput {
 	@Inject
 	protected InputManager inputManager;
 	
-	protected FastList<String> mappings = FastList.newInstance();
+	protected ArrayList<String> mappings = new ArrayList<>();
 	
 	private boolean addToUpdateLoop;
 	private boolean isRegistred;
@@ -109,4 +108,5 @@ public abstract class RavenClawInput {
 	public void addToUpdateLoop() {
 		addToUpdateLoop = true;
 	}
+	
 }

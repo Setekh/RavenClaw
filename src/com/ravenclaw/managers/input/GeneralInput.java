@@ -44,7 +44,11 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.scene.Spatial;
+import com.ravenclaw.RavenClaw;
+import com.ravenclaw.managers.ActionManager;
 import com.ravenclaw.managers.SelectionManager;
+import com.ravenclaw.managers.TransformManager;
+import com.ravenclaw.managers.transform.TransformTool;
 import com.ravenclaw.swing.misc.S_ConfirmDeletion;
 import com.ravenclaw.utils.Utils;
 
@@ -58,6 +62,14 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	@Inject
 	private SelectionManager selectionManager;
 	
+	@Inject
+	private ActionManager actionManager;
+	
+	@Inject
+	private TransformManager transformManager;
+	
+	private boolean isCtrlPressed, isShiftPressed;
+	
 	/* (non-Javadoc)
 	 * @see com.ravenclaw.managers.input.RavenClawInput#registerInputImpl()
 	 */
@@ -65,6 +77,11 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	protected void registerInputImpl() {
 		addInput("click", this, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
 		addInput("delete", this, new KeyTrigger(KeyInput.KEY_DELETE));
+		
+		addInput("isCtrlPressed", this, new KeyTrigger(KeyInput.KEY_LCONTROL));
+		addInput("isShiftPressed", this, new KeyTrigger(KeyInput.KEY_LSHIFT));
+
+		addInput("zKey", this, new KeyTrigger(KeyInput.KEY_Z));
 		
 		addInput("moveX+", this, new MouseAxisTrigger(MouseInput.AXIS_X, false));
 		addInput("moveX-", this, new MouseAxisTrigger(MouseInput.AXIS_X, true));
@@ -78,15 +95,43 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 	@Override
 	public void onAction(String name, boolean isPressed, float tpf) {
 		
+		if(!RavenClaw.checkFocus()) {
+			return; // Skipping
+		}
+
+		if(name.equals("isCtrlPressed")) {
+			isCtrlPressed = isPressed;
+		}
+		else if(name.equals("isShiftPressed")) {
+			isShiftPressed = isPressed;
+		}
+
 		if(isPressed) {
 			switch (name) {
+				case "zKey": {
+					if(isCtrlPressed) {
+						actionManager.undoLast();
+						System.out.println("Undone last.");
+					}
+					break;
+				}
 				case "click": {
+					TransformTool tool = transformManager.getCurrentTool();
+					if(tool != null) {
+						CollisionResults rz = Utils.pick(tool.getToolShape());
+						if(rz.size() > 0) {
+							// W/e action xD
+							transformManager.actionPerformed(rz.getClosestCollision());
+							return;
+						}
+					}
+					
 					CollisionResults rz = Utils.pick(claw.getMainNode());
 					if(rz.size() > 0) {
 						Spatial target = rz.getClosestCollision().getGeometry();
 						
 						if(target != null)
-							selectionManager.select(target);
+							selectionManager.select(target, isShiftPressed);
 					}
 					break;
 				}
@@ -96,6 +141,15 @@ public final class GeneralInput extends RavenClawInput implements ActionListener
 				}
 				default:
 					//System.out.println("Unhandled: "+name);
+					break;
+			}
+		}
+		else {
+			switch (name) {
+				case "click":
+					transformManager.deactivate();
+					break;
+				default:
 					break;
 			}
 		}

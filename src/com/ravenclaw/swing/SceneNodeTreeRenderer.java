@@ -19,6 +19,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import javolution.util.FastMap;
 
+
 import com.jme3.animation.AnimControl;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.control.CharacterControl;
@@ -47,7 +48,7 @@ public class SceneNodeTreeRenderer extends DefaultTreeCellRenderer {
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 8887684748693577427L;
-	private final FastMap<Class<?>[], BufferedImage> icons = new FastMap<Class<?>[], BufferedImage>();
+	private final FastMap<Class<?>[], BufferedImage> icons = new FastMap<>();
 	
 	public SceneNodeTreeRenderer() {
 		//setBackground(Color.GRAY);

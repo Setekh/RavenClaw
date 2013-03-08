@@ -99,6 +99,13 @@ public class ContentPanel extends JSplitPane {
 	}
 
 	/**
+	 * @return the center
+	 */
+	public CenterPanel getCenter() {
+		return center;
+	}
+	
+	/**
 	 * @return the bottom
 	 */
 	public BottomPanel getBottom() {

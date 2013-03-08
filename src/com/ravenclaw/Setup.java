@@ -52,11 +52,11 @@ class Setup extends CoraxSetupTemplate {
 		installProcessor(new PrimeAnnotations());
 
 		addSingleton(ActionManager.class);
+		addSingleton(SelectionManager.class);
 		addSingleton(InputStateManager.class);
 		addSingleton(Inspector.class);
-		addSingleton(SelectionManager.class);
-		addSingleton(TransformManager.class);
 		addSingleton(ObjectManager.class);
+		addSingleton(TransformManager.class);
 		
 		RavenClaw app = new RavenClaw();
 		addSingleton(app.getClass(), app);

@@ -33,7 +33,6 @@ package com.ravenclaw.game.appstates;
 
 import com.jme3.app.Application;
 import com.jme3.app.FlyCamAppState;
-import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.input.FlyByCamera;
@@ -43,6 +42,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.ravenclaw.RavenClaw;
+import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.managers.InputStateManager;
 import com.ravenclaw.managers.ObjectManager;
 import com.ravenclaw.swing.ContentPanel;
@@ -57,12 +57,18 @@ import corvus.corax.CorvusConfig;
  */
 public class StartedRendering extends AbstractAppState {
 
+	private SceneGraph app;
+
+	private float con;
+
 	/* (non-Javadoc)
 	 * @see com.jme3.app.state.AbstractAppState#initialize(com.jme3.app.state.AppStateManager, com.jme3.app.Application)
 	 */
 	@Override
-	public void initialize(AppStateManager stateManager, Application app) {
+	public void initialize(AppStateManager stateManager, Application ap) {
 		
+		this.app = (SceneGraph) ap;
+
 		// Notify
 		Corax.listen(ArchidIndex.RenderingStarted, null, app);
 
@@ -72,23 +78,26 @@ public class StartedRendering extends AbstractAppState {
 		// SO it started
 		RavenClaw cw = Corax.getInstance(RavenClaw.class);
 
-		Node main = cw.getMainNode();
+		Node main = cw.getMainNode(), rootNode =  app.getRootNode();
 
 		if(!main.removeFromParent()) { // Means startup
 			CorvusConfig.addProperty(ArchidIndex.StartupTimeStamp, System.currentTimeMillis());
 			System.out.println("Startin: TimeStamp = "+CorvusConfig.getProperty(ArchidIndex.StartupTimeStamp, -1));
-			
-			Spatial spat = FastGeoms.genBoxGeometry(false);
-			
-			ObjectManager manager = Corax.getInstance(ObjectManager.class);
-			manager.register(spat);
-			main.attachChild(spat);
+
+			for (int i = 0; i < 2; i++) {
+				Spatial spat = FastGeoms.genBoxGeometry(false);
+				
+				ObjectManager manager = Corax.getInstance(ObjectManager.class);
+				manager.register(spat);
+				main.attachChild(spat);
+				
+				spat.setLocalTranslation(0, i * 4, 0);
+			}
 		}
 		
-		SimpleApplication sapp = (SimpleApplication) app;
-		
-		sapp.getRootNode().attachChild(cw.getMainNode());
-		
+		rootNode.attachChild(FastGeoms.createGrid());
+		rootNode.attachChild(cw.getMainNode());
+
 		if(!cw.getFrame().isVisible())
 			cw.getFrame().setVisible(true);
 
@@ -97,14 +106,17 @@ public class StartedRendering extends AbstractAppState {
 			FlyCamAppState state = app.getStateManager().getState(FlyCamAppState.class);
 			FlyByCamera cam = state.getCamera();
 
+			app.getInputManager().deleteMapping("FLYCAM_Lower");
+
 			app.getInputManager().deleteMapping("FLYCAM_ZoomIn");
 			app.getInputManager().deleteMapping("FLYCAM_ZoomOut");
 			app.getInputManager().deleteMapping("FLYCAM_RotateDrag");
 			app.getInputManager().addMapping("FLYCAM_RotateDrag", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
 			app.getInputManager().addListener(cam, "FLYCAM_RotateDrag");
+			
 
 			cam.setDragToRotate(true);
-			cam.setMoveSpeed(cam.getMoveSpeed() * 1.7f);
+			cam.setMoveSpeed(cam.getMoveSpeed() * 5.7f);
 			//cam.setEnabled(false);
 		}
 
@@ -113,7 +125,27 @@ public class StartedRendering extends AbstractAppState {
 		
 		// Init the tools
 		Corax.getInstance(InputStateManager.class);
-		ContentPanel cp = (ContentPanel)cw.getFrame().getContentPane();
+		ContentPanel cp = cw.getContentPane();
 		cp.parseRootNode();
 	}
+	
+	/* (non-Javadoc)
+	 * @see com.jme3.app.state.AbstractAppState#update(float)
+	 */
+	@Override
+	public void update(float tpf) {
+
+		if(con > 1.0f) {
+			
+			if(!RavenClaw.checkFocus()) {
+				System.out.println("Out of Focus");
+				app.getInputManager().reset();
+			}
+			
+			con = 0;
+		}
+		
+		con += tpf;
+	}
+	
 }

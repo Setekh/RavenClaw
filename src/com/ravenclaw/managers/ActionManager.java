@@ -31,7 +31,7 @@
  */
 package com.ravenclaw.managers;
 
-import javolution.util.FastList;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -43,7 +43,7 @@ public final class ActionManager {
 
 	private static Logger _log = Logger.getLogger(ActionManager.class);
 
-	private FastList<UseAction> actions = new FastList<>();
+	private ArrayList<UseAction> actions = new ArrayList<>();
 
 	public void record(UseAction action) {
 		try {
@@ -63,19 +63,27 @@ public final class ActionManager {
 	}
 	
 	public void undoLast() {
-		UseAction action = actions.removeLast();
+		if(actions.isEmpty())
+			return;
+		
+		int pos = actions.size() - 1;
+		
+		UseAction action = actions.remove(pos);
 		
 		if(action != null) {
-			undo(null);
+			undo(action);
 		}
 		
 	}
 
 	public void redoLast() {
-		UseAction action = actions.removeLast();
+		if(actions.isEmpty())
+			return;
+
+		UseAction action = actions.remove(actions.size() - 1);
 		
 		if(action != null) {
-			redo(null);
+			redo(action);
 		}
 	}
 

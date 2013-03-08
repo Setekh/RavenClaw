@@ -38,20 +38,20 @@ package com.ravenclaw.utils;
 public final class ArchidIndex {
 
 	/** Arguments: Application */
-	public static final int RenderingStarted = 0x01;
+	public static final int RenderingStarted = 0x11;
 	
 	/** Arguments: Dimension, JFrame */
-	public static final int FrameResized = 0x00001;
+	public static final int FrameResized = 0x21;
 
 	/** Notify */
-	public static final int DeleteSelected = 0x0001;
+	public static final int DeleteSelected = 0x31;
 	/** Selection */
-	public static final int Selected = 0x0002;
+	public static final int Selected = 0x32;
 	/** Selection */
-	public static final int Unselected = 0x0003;
+	public static final int Unselected = 0x33;
 
 	/** Spatial **/
-	public static final int NewEntity = 0;
+	public static final int NewEntity = 0x41;
 	
 	public static String StartupTimeStamp = "Start_TimeStamp";
 }

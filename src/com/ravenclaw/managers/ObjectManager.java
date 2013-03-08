@@ -39,7 +39,10 @@ import org.apache.log4j.Logger;
 
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.ravenclaw.RavenClaw;
 import com.ravenclaw.utils.Utils;
+
+import corvus.corax.processing.annotation.Inject;
 
 /**
  * @author Vlad
@@ -51,6 +54,9 @@ import com.ravenclaw.utils.Utils;
  */
 public final class ObjectManager {
 	private static final Logger _log = Logger.getLogger(ObjectManager.class);
+	
+	@Inject
+	private RavenClaw claw;
 	
 	private final FastMap<Spatial, ObjectData> data = new FastMap<Spatial, ObjectData>().shared();
 
@@ -116,14 +122,28 @@ public final class ObjectManager {
 			if(spat == null) {
 				throw new RuntimeException("ObjectData(Sptial): Spatial cannot be null!");
 			}
+
+			target = spat;
 			
 			if(spat instanceof Node) {
 				this.rootNode = (Node) spat;
 				holds = Utils.parseSpatials(rootNode);
 			}
 			else {
-				holds = new ArrayList<>();
-				holds.add(target = spat);
+				
+				Node parent = spat.getParent();
+
+				if(parent != null && (parent != claw.getMainNode() || parent != claw.getApplication().getRootNode())) {
+					rootNode = parent;
+				}
+				
+				if(rootNode != null) {
+					holds = Utils.parseSpatials(rootNode); 
+				}
+				else {
+					holds = new ArrayList<>();
+					holds.add(target = spat);
+				}
 			}
 
 			process(this);
@@ -177,6 +197,13 @@ public final class ObjectManager {
 		
 		public ArrayList<Spatial> getHolds() {
 			return holds;
+		}
+		
+		public Spatial getMaster() {
+			if(rootNode == null)
+				return target;
+			
+			return rootNode;
 		}
 	}
 	
