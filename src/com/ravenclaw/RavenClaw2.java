@@ -32,28 +32,40 @@
 package com.ravenclaw;
 
 import java.awt.BorderLayout;
-import java.awt.ComponentOrientation;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
 
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.JXFrame;
+import org.jdesktop.swingx.JXPanel;
+import org.jdesktop.swingx.VerticalLayout;
 
 import com.javadocking.DockingManager;
 import com.javadocking.dock.Position;
-import com.javadocking.dock.SingleDock;
 import com.javadocking.dock.SplitDock;
 import com.javadocking.dock.TabDock;
 import com.javadocking.dockable.DefaultDockable;
 import com.javadocking.dockable.DockingMode;
 import com.javadocking.model.FloatDockModel;
+import com.javadocking.model.codec.DockModelPropertiesDecoder;
+import com.javadocking.model.codec.DockModelPropertiesEncoder;
 import com.ravenclaw.FirstExample.TextPanel;
+import com.ravenclaw.SwingX.InspectorElement;
 import com.ravenclaw.swing.RCMenuBar;
 
 /**
@@ -64,6 +76,7 @@ public class RavenClaw2 {
 	private static final Logger _log = Logger.getLogger(RavenClaw.class);
 	
 	private final JXFrame frame;
+	private FloatDockModel dockModel;
 	
 	@SuppressWarnings("serial")
 	public RavenClaw2() {
@@ -74,10 +87,12 @@ public class RavenClaw2 {
 
 				//if (ret == 0) { // OK
 					super.dispose();
+					saveDock();
 					System.out.println("Good bye.");
 					System.exit(0);
 				//}
-			};
+			}
+
 		};
 		
 		try {
@@ -91,37 +106,114 @@ public class RavenClaw2 {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
-		
-		frame.setJMenuBar(new RCMenuBar());
+		@SuppressWarnings("serial")
+		JPanel InspectorRoot = new JPanel(new VerticalLayout()) {
 
-		FloatDockModel dockModel = new FloatDockModel();
-		dockModel.addOwner("RavenClawWindow", frame);
-		DockingManager.setDockModel(dockModel);
+			@Override
+			public Component add(Component comp) {
+				Component toAdd = super.add(comp);
 
-		JPanel content = new JPanel(new BorderLayout());
+				if(comp instanceof InspectorElement)
+					add(((InspectorElement) comp).getCollapsibleContainer());
 
-		SplitDock rootDock = new SplitDock();
-		rootDock.setAutoscrolls(true);
+				return toAdd;
+			}
 
-		TabDock dock = new TabDock();
-
-		DefaultDockable[] docks = new DefaultDockable[] {
-			new DefaultDockable("Window1", new TextPanel("I am window 1."), "Window 1", null, DockingMode.ALL),
-			new DefaultDockable("Window2", new TextPanel("I am window 2."), "Window 2", null, DockingMode.ALL),
-			new DefaultDockable("Window3", new TextPanel("I am window 3."), "Window 3", null, DockingMode.ALL),
-			new DefaultDockable("Window4", new TextPanel("I am window 4."), "Window 4", null, DockingMode.ALL),
-			new DefaultDockable("Window5", new TextPanel("I am window 5."), "Window 5", null, DockingMode.ALL)
+			@Override
+			public void remove(Component comp) {
+				super.remove(comp);
+				if(comp instanceof InspectorElement)
+					remove(((InspectorElement) comp).getCollapsibleContainer());
+			}
 		};
 		
+		JScrollPane con = new JScrollPane(InspectorRoot);
+		
+		for (int i = 0; i < 20; i++) {
+			InspectorElement elem = new InspectorElement("Some Control v"+i);
+			JXPanel panel =  elem.getContent();
+			
+			JPanel pane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			pane.add(new JButton("Add Me"));
+			pane.add(new JButton("Delete Me"));
+			pane.add(new JButton("Cut Me"));
+			pane.add(new JButton("Slaughter Me"));
+			pane.add(new JButton("Lynch Me"));
+			panel.add(pane);
+			
+			InspectorRoot.add(elem);
+		}
+
+		DefaultDockable[] docks = new DefaultDockable[] {
+				new DefaultDockable("Scene-Window", new TextPanel("I am window 1."), "Window 1", null, DockingMode.ALL),
+				new DefaultDockable("Inspector-Window", con, "Window 2", null, DockingMode.ALL),
+				new DefaultDockable("Project-Window", new TextPanel("I am window 3."), "Window 3", null, DockingMode.ALL),
+				new DefaultDockable("Composer-Window", new TextPanel("I am window 4."), "Window 4", null, DockingMode.ALL),
+				new DefaultDockable("Explorer-Window", new TextPanel("I am window 5."), "Window 5", null, DockingMode.ALL),
+				new DefaultDockable("Preview-Window", new TextPanel("I am window 5."), "Window 5", null, DockingMode.ALL)
+			};
+			
 		for (int i = 0; i < docks.length; i++) {
-			dock.addDockable(docks[i], new Position(i));
+			docks[i].setTitle(docks[i].getID().split("-")[0]);
 		}
 		
-		rootDock.addChildDock(dock, new Position(Position.CENTER));
-		dockModel.addRootDock("Main", rootDock, frame);
+		frame.setJMenuBar(new RCMenuBar());
+		JPanel content = new JPanel(new BorderLayout());
 		
-		content.add(rootDock, BorderLayout.CENTER);
+		File file = new File("./assets/sdk/", "dockable.dck");
+
+		// Try to decode the dock model from file.
+		DockModelPropertiesDecoder dockModelDecoder = new DockModelPropertiesDecoder();
+		if (dockModelDecoder.canDecodeSource(file.getPath()))
+		{
+			try 
+			{
+				// Create the map with the dockables, that the decoder needs.
+				Map dockablesMap = new HashMap();
+				for (int index = 0; index < docks.length; index++)
+				{
+					dockablesMap.put(docks[index].getID(), docks[index]);
+				}	
+								
+				// Create the map with the owner windows, that the decoder needs.
+				Map ownersMap = new HashMap();
+				ownersMap.put("RavenClawWindow", frame);
+				
+				// Decode the file.
+				dockModel = (FloatDockModel)dockModelDecoder.decode(file.getPath(), dockablesMap, ownersMap, null);
+				
+				SplitDock rootDock = (SplitDock) dockModel.getRootDock("Main");
+				content.add(rootDock, BorderLayout.CENTER);
+			}
+			catch (FileNotFoundException fileNotFoundException){
+				System.out.println("Could not find the file [" + file.getPath() + "] with the saved dock model.");
+				System.out.println("Continuing with the default dock model.");
+			}
+			catch (IOException ioException){
+				System.out.println("Could not decode a dock model: [" + ioException + "].");
+				ioException.printStackTrace();
+				System.out.println("Continuing with the default dock model.");
+			}
+		}
+		else {
+			dockModel = new FloatDockModel();
+			dockModel.addOwner("RavenClawWindow", frame);
+			DockingManager.setDockModel(dockModel);
+	
+			SplitDock rootDock = new SplitDock();
+			rootDock.setAutoscrolls(true);
+	
+			TabDock dock = new TabDock();
+	
+			for (int i = 0; i < docks.length; i++) {
+				dock.addDockable(docks[i], new Position(i));
+			}
+			
+			rootDock.addChildDock(dock, new Position(Position.CENTER));
+			dockModel.addRootDock("Main", rootDock, frame);
+	
+			content.add(rootDock, BorderLayout.CENTER);
+		}
 		
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setContentPane(content);
@@ -129,8 +221,25 @@ public class RavenClaw2 {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 
+	private void saveDock() {
+		DockModelPropertiesEncoder encoder = new DockModelPropertiesEncoder();
+		
+		try {
+			File file = new File("./assets/sdk/", "dockable.dck");
+			
+			if(!file.exists()) {
+				file.createNewFile();
+			}
+			
+			encoder.export(dockModel, file.getPath());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		new RavenClaw2().frame.setVisible(true);
 	}
 }
