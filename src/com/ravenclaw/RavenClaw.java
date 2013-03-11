@@ -46,7 +46,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
+import java.util.logging.Handler;
+import java.util.logging.LogManager;
 
 import javax.imageio.ImageIO;
 import javax.swing.FocusManager;
@@ -57,7 +60,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
+import org.apache.log4j.Hierarchy;
 import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
+import org.jdesktop.swingx.JXFrame;
 
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -65,10 +71,17 @@ import com.jme3.system.AppSettings;
 import com.jme3.system.JmeCanvasContext;
 import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.swing.CanvasFocusListener;
-import com.ravenclaw.swing.ContentPanel;
 import com.ravenclaw.swing.RCMenuBar;
 import com.ravenclaw.swing.ToolBar;
+import com.ravenclaw.swing.WindowService;
+import com.ravenclaw.swing.windows.InspectorWindow;
+import com.ravenclaw.swing.windows.NodeExplorerWindow;
+import com.ravenclaw.swing.windows.PreviewWindow;
+import com.ravenclaw.swing.windows.ProjectWindow;
+import com.ravenclaw.swing.windows.SceneWindow;
 import com.ravenclaw.utils.ArchidIndex;
+import com.ravenclaw.utils.log.MelloriLogHandler;
+import com.ravenclaw.utils.log.ThrowableMessageFactory;
 
 import corvus.corax.Corax;
 import corvus.corax.processing.annotation.Initiate;
@@ -84,15 +97,17 @@ public final class RavenClaw {
 	private Canvas canvas;
 	private SceneGraph app;
 
+	private WindowService windowService;
+	
 	private Node mainNode = new Node("RavenClaw: Node");
 
-	private ContentPanel contentpanel;
+	private final JXFrame frame;
 
-	private final JFrame frame;
+	private boolean _1rst;
 	
 	@SuppressWarnings("serial")
 	public RavenClaw() {
-		frame = new JFrame("Raven Claw") {
+		frame = new JXFrame("Raven Claw") {
 			public void dispose() {
 				
 				int ret = JOptionPane.showConfirmDialog(Corax.getInstance(RavenClaw.class).getFrame(),
@@ -101,12 +116,14 @@ public final class RavenClaw {
 				if(ret == 0) { // OK
 					super.dispose();
 
+					windowService.save(); // Save last
 					System.out.println("Good bye.");
 					System.exit(0);
 				}
 			};
 		};
 		
+		windowService = new WindowService(this, frame);
 		createFrame();
 	}
 	
@@ -129,12 +146,11 @@ public final class RavenClaw {
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.add(new ToolBar(), BorderLayout.NORTH);
 		
-		contentpanel = new ContentPanel();
-		panel.add(contentpanel, BorderLayout.CENTER);
+		//panel.add(contentpanel, BorderLayout.CENTER);
 		
 		//frame.setContentPane(contentpanel);
 		frame.setContentPane(panel);
-		
+
 		frame.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -150,6 +166,8 @@ public final class RavenClaw {
 
 		frame.setSize((int)(size.width / 1.23), (int) (size.height / 1.23));
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		_1rst = true;
 	}
 	
 	@Initiate
@@ -159,17 +177,13 @@ public final class RavenClaw {
 		if (app != null) {
 			mainNode.removeFromParent();
 			app.stop(true);
-			frame.remove(canvas);
 			corax.disposeInstance(app);
 		}
 
 		app = new SceneGraph();
 
-		// Init
-		corax.addSingleton(app.getClass(), app);
-
-		AppSettings settings;
-		app.setSettings(settings = new AppSettings(true));
+		AppSettings settings = new AppSettings(true);
+		app.setSettings(settings);
 
 		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -196,29 +210,46 @@ public final class RavenClaw {
 			}
 		}
 
+		// Init
+		corax.addSingleton(app.getClass(), app);
+
         app.setPauseOnLostFocus(false);
+        
 		app.createCanvas();
-		app.startCanvas();
+		app.startCanvas(true);
 
 		canvas = ((JmeCanvasContext)app.getContext()).getCanvas();
 		canvas.addFocusListener(new CanvasFocusListener());
 
-
-		canvas.setMinimumSize(new Dimension((int)(settings.getWidth() / 1.23), (int)(settings.getHeight() / 1.23)));
+		//canvas.setMinimumSize(new Dimension((int)(settings.getWidth() / 1.23), (int)(settings.getHeight() / 1.23)));
+		canvas.setMinimumSize(new Dimension(100, 10));
 		canvas.setPreferredSize(new Dimension((int) (size.width / 1.23), (int) (size.height / 1.23)));
 		
-		canvas.setBackground(Color.DARK_GRAY);
-		contentpanel.load(canvas);
-		contentpanel.parseRootNode();
+		if(_1rst) {
+			canvas.setBackground(Color.DARK_GRAY);
 
-		frame.setVisible(true);
+			windowService.registerWindow(new SceneWindow(canvas), false);
+			windowService.registerWindow(new InspectorWindow(), false);
+			windowService.registerWindow(new NodeExplorerWindow(), false);
+			windowService.registerWindow(new ProjectWindow(), false);
+			windowService.registerWindow(new PreviewWindow(), false);
 
+			_1rst = false;
+
+			windowService.loadLast();
+			frame.setVisible(true);
+		}
+		else {
+			windowService.restartAll();
+		}
+		
+		windowService.getWindow(SceneWindow.class).setCanvas(canvas);
 	}
 
 	/**
 	 * @return the frame
 	 */
-	public JFrame getFrame() {
+	public JXFrame getFrame() {
 		return frame;
 	}
 	
@@ -244,25 +275,41 @@ public final class RavenClaw {
 		return app;
 	}
 	
-	public ContentPanel getContentPane() {
-		return contentpanel;
-	}
-
 	public static void main(String[] args) throws Exception {
 		// Remember to disable it at first if running in eclipse, so all the needed dependences get extracted.
 		//JmeSystem.setLowPermissions(true);
 
-		try
-		{
-			JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-			ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
+		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+		ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
 
+		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.warn("Unable to set system default theme!", e);
 		}
 
+		java.util.logging.Logger logger = LogManager.getLogManager().getLogger("");
+		for(Handler h : logger.getHandlers())
+			logger.removeHandler(h);
+
+		logger.addHandler(new MelloriLogHandler());
+		
+		DOMConfigurator.configure("./log/log4j.xml");
+
+		Hierarchy lr = (Hierarchy) org.apache.log4j.LogManager.getLoggerRepository();
+		try
+		{
+			Field field = lr.getClass().getDeclaredField("defaultFactory");
+			field.setAccessible(true);
+			Class<?> factory = Class.forName(System.getProperty("log4j.loggerfactory", ThrowableMessageFactory.class.getName()));
+			field.set(lr, factory.newInstance());
+			field.setAccessible(false);
+		}
+		catch(Exception e) {
+			_log.warn("Unable to set custom log factory!", e);
+		}
+		
 		Corax.create(new Setup());
 	}
 
@@ -307,7 +354,7 @@ public final class RavenClaw {
 			return false;
 		}
 			
-		Component comp = claw.contentpanel.findComponentAt(xy);
+		Component comp = claw.frame.findComponentAt(xy);
 //		if(comp != null)
 //			System.out.println("Current Component in view: "+comp.getClass().getSimpleName());
 //		else

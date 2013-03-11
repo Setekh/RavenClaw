@@ -31,6 +31,8 @@
  */
 package com.ravenclaw.swing.misc;
 
+import javax.swing.JOptionPane;
+
 import com.ravenclaw.RavenClaw;
 
 /**
@@ -49,8 +51,8 @@ public class S_RequestRestart implements Runnable {
 	 */
 	@Override
 	public void run() {
-		System.out.println("Request sent");
-		claw.start();
-		System.out.println("Request done");
+		//claw.start();
+		
+		JOptionPane.showMessageDialog(claw.getFrame(), "Currently the option is disabled cause of the JavaDockable acting up, try not to crash your scenegraph.");
 	}
 }

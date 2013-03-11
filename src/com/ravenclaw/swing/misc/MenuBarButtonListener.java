@@ -60,8 +60,8 @@ import com.jme3.scene.Spatial;
 import com.ravenclaw.RavenClaw;
 import com.ravenclaw.game.SceneGraph;
 import com.ravenclaw.managers.ObjectManager;
-import com.ravenclaw.swing.ContentPanel;
-import com.ravenclaw.swing.SceneNavigator;
+import com.ravenclaw.swing.WindowService;
+import com.ravenclaw.swing.windows.NodeExplorerWindow;
 import com.ravenclaw.utils.FastGeoms;
 
 import corvus.corax.Corax;
@@ -112,7 +112,7 @@ public class MenuBarButtonListener implements ActionListener {
 						
 						@Override
 						public void run() {
-							ContentPanel.getRegisteredComponent(SceneNavigator.class).reload();
+							Corax.getInstance(WindowService.class).getWindow(NodeExplorerWindow.class).reload();
 						}
 					});
 					break;
@@ -153,7 +153,7 @@ public class MenuBarButtonListener implements ActionListener {
 					
 					rc.attachChild(spat);
 
-					ContentPanel.getRegisteredComponent(SceneNavigator.class).reload();
+					Corax.getInstance(WindowService.class).getWindow(NodeExplorerWindow.class).reload();
 					break;
 				}
 				default:

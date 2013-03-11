@@ -125,8 +125,6 @@ public class StartedRendering extends AbstractAppState {
 		
 		// Init the tools
 		Corax.getInstance(InputStateManager.class);
-		ContentPanel cp = cw.getContentPane();
-		cp.parseRootNode();
 	}
 	
 	/* (non-Javadoc)

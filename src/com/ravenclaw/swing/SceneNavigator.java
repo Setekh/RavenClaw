@@ -191,8 +191,7 @@ public class SceneNavigator extends JPanel implements TreeWillExpandListener, Co
 	 * @see javax.swing.event.TreeWillExpandListener#treeWillCollapse(javax.swing.event.TreeExpansionEvent)
 	 */
 	@Override
-	public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException
-	{
+	public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
 	}
 
 	public void reload() {
